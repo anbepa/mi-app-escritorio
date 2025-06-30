@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Matriz de Casos de Prueba - Electron</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="xterm.css">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Matriz de Casos de Prueba</h1>
+    </header>
+    
+    <div class="add-scenario-bar">
+      <button class="btn" id="btn-cargar-csv">Cargar archivo CSV</button>
+      <button class="btn" id="btn-agregar-escenario">Agregar Escenario en Blanco</button>
+    </div>
+    <div class="sugerencia-impresion">
+      Para mejores resultados, imprime en orientación horizontal (landscape).
+    </div>
+    <div class="export-bar">
+      <button class="btn" onclick="exportarZip()">Exportar Paquete (.zip)</button>
+      <button class="btn" onclick="exportarTodosEscenariosPDF()">Exportar todos los escenarios a PDF</button>
+      <button class="btn" onclick="window.print()">Imprimir / Guardar PDF</button>
+    </div>
+    <footer class="footer">Desarrollado con Electron - 2024</footer>
+  </div>
+  <div id="modal-confirm" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.35); z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:10px; padding:24px; min-width:400px; max-width:90vw; box-shadow:0 2px 16px #0008; position:relative;">
+      <h3 style="margin-top:0;">¿Enviar este prompt a la consola?</h3>
+      <pre id="modal-confirm-text" style="background:#222; color:#fff; padding:12px; border-radius:6px; font-size:1em; max-height:300px; overflow:auto;"></pre>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
+        <button class="btn btn-secondary" onclick="cerrarModalConfirm(false)">Cancelar</button>
+        <button class="btn btn-primary" onclick="cerrarModalConfirm(true)">Confirmar</button>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html> 
