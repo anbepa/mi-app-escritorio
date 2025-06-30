@@ -62,15 +62,15 @@ async function abrirTerminalGemini(idx) {
 
   // Limpiar y preparar la terminal para una nueva sesión
   xterms[idx].clear();
-  window.electronAPI.abrirTerminal('/bin/zsh', [], idx); // Iniciar el shell en el backend
-  
-  // Asegurarse de que la terminal se redimensione y obtenga el foco
+  window.electronAPI.abrirTerminal('/bin/zsh', [], idx);
+  // Esperar un poco y luego escribir 'gemini\n' para lanzar gemini automáticamente
   setTimeout(() => {
     if (xterms[idx]) {
-      xterms[idx].fit(); // Redimensionar la terminal (llamando al método proxy)
-      xterms[idx].focus(); // Darle foco (llamando al método proxy)
+      window.electronAPI.enviarInputTerminal('gemini\n', idx);
+      xterms[idx].fit();
+      xterms[idx].focus();
     }
-  }, 100);
+  }, 300);
 }
 
 function cerrarTerminalGemini(idx) {
@@ -93,10 +93,13 @@ function cerrarTerminalGemini(idx) {
 function enviarPromptATerminal(idx) {
   const promptArea = document.getElementById(`prompt-area-${idx}`);
   if (promptArea && xterms[idx]) {
-    const texto = promptArea.value;
+    // Reemplazar saltos de línea por espacios
+    const texto = promptArea.value.replace(/\n/g, ' ');
     if (texto.trim()) {
-      // Envía el comando al proceso PTY del backend para su ejecución
+      // Enviar el prompt completo al proceso Gemini CLI
       window.electronAPI.enviarInputTerminal(texto + '\n', idx);
+      // Limpiar el área de texto después de enviar el prompt
+      promptArea.value = '';
     }
   }
 }
