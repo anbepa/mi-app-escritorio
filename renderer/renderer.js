@@ -45,7 +45,6 @@ async function abrirTerminalGemini(idx) {
       console.log('Input capturado en xterm:', data);
       // Convertir Enter a nueva línea para ejecución de comando
       const processedData = (data === '\r') ? '\n' : data;
-      xterms[idx].write(processedData); // Eco local inmediato
       window.electronAPI.enviarInputTerminal(processedData, idx);
     });
 
