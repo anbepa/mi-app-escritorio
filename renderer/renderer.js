@@ -15,8 +15,17 @@ function actualizarYMostrarPrompt(idx) {
   const nombreEscenario = esc['Escenario de Prueba'] || '';
   const pasos = esc['Paso a Paso'] || '';
   
-  const prompt = `Ejecutar escenario: "${nombreEscenario}" con Playwright MCP. Pasos a ejecutar: "${pasos}"`;
-
+  const prompt = `Actúa como un experto en automatización de pruebas con Playwright.
+  Tu tarea es generar un script para automatizar un escenario de prueba usando un framework personalizado llamado "Playwright MCP".
+  
+  **Escenario a automatizar:**
+  "${nombreEscenario}"
+  
+  **Pasos detallados a seguir:**
+  El script debe implementar la siguiente secuencia de pasos:
+  "${pasos}"
+  
+  Genera únicamente el código del script de Playwright correspondiente a estos pasos.`;
   promptArea.value = prompt;
   promptPanel.style.display = 'block';
 }
@@ -40,12 +49,11 @@ async function abrirTerminalGemini(idx) {
     // Pasamos el ID del elemento para que preload.js lo busque en su contexto
     window.electronAPI.openXterm(idx, inner.id);
 
-    // Configurar el listener para la entrada de datos desde la terminal
+    // [CAMBIO 1] Configurar el listener para la entrada de datos desde la terminal
     xterms[idx].onData(data => {
-      console.log('Input capturado en xterm:', data);
-      // Convertir Enter a nueva línea para ejecución de comando
-      const processedData = (data === '\r') ? '\n' : data;
-      window.electronAPI.enviarInputTerminal(processedData, idx);
+      // Pasa los datos directamente al proceso del backend (pty).
+      // Esto asegura que la tecla "Enter" (\r) se maneje correctamente.
+      window.electronAPI.enviarInputTerminal(data, idx);
     });
 
     // Configurar el listener para los datos que vienen del proceso principal
@@ -96,8 +104,9 @@ function enviarPromptATerminal(idx) {
     // Reemplazar saltos de línea por espacios
     const texto = promptArea.value.replace(/\n/g, ' ');
     if (texto.trim()) {
-      // Enviar el prompt completo al proceso Gemini CLI
-      window.electronAPI.enviarInputTerminal(texto + '\n', idx);
+      // [CAMBIO 2] Enviar el prompt completo al proceso Gemini CLI con retorno de carro ('\r')
+      // para simular la presión de la tecla "Enter" y ejecutar el comando.
+      window.electronAPI.enviarInputTerminal(texto + '\r', idx);
       // Limpiar el área de texto después de enviar el prompt
       promptArea.value = '';
     }
@@ -289,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-cargar-csv').addEventListener('click', async () => {
     const ruta = await window.electronAPI.abrirArchivo();
     if (!ruta) return;
-    const contenido = window.electronAPI.leerArchivo(ruta);
+    const contenido = await window.electronAPI.leerArchivo(ruta);
     Papa.parse(contenido, {
       header: true,
       skipEmptyLines: true,
