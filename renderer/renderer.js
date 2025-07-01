@@ -21,9 +21,8 @@ function actualizarYMostrarPrompt(idx) {
   prompt += `Responde en español.\n`;
   prompt += `Usando Playwright MCP, ejecuta los siguientes pasos:\n`;
   prompt += `Nota importante: Crea un directorio para las imágenes llamado ${nombreEscenario}. Usa el comando mkdir -p reporte_wwf para asegurar que no falle si la carpeta ya existe. El navegador se debe iniciar en modo incógnito (incognito: true) y debe ignorar todos los certificados (ignoreHTTPSErrors: true).\n`;
-  if (pasosArr.length >= 2) {
-    prompt += `Solo toma una captura de pantalla en el penúltimo paso (último - 1). La imagen debe guardarse en la ruta absoluta de la carpeta creada (${nombreEscenario}) y el archivo debe llamarse exactamente como el nombre del paso.\n\n`;
-  }
+  prompt += `Si una captura de pantalla se guarda en una ruta temporal, muévela automáticamente a la ruta absoluta especificada por el usuario en el prompt.\n`;
+  prompt += '\n';
 
   pasosArr.forEach((paso, i) => {
     const nombrePaso = paso.replace(/^[0-9]+\.?\s*/, '').trim();
@@ -108,6 +107,7 @@ function cerrarTerminalGemini(idx) {
 
 function enviarPromptATerminal(idx) {
   const promptArea = document.getElementById(`prompt-area-${idx}`);
+  const promptPanel = document.getElementById(`prompt-panel-${idx}`);
   if (promptArea && xterms[idx]) {
     // Reemplazar saltos de línea por espacios
     const texto = promptArea.value.replace(/\n/g, ' ');
@@ -116,6 +116,8 @@ function enviarPromptATerminal(idx) {
       window.electronAPI.enviarInputTerminal(texto + '\r', idx);
       // Limpiar el área de texto después de enviar el prompt
       promptArea.value = '';
+      // Ocultar el panel del prompt
+      if (promptPanel) promptPanel.style.display = 'none';
     }
   }
 }
