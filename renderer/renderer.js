@@ -197,7 +197,7 @@ function crearEscenarioHTML(esc, idx) {
         </div>
         <div class="xterm-escenario-container" id="xterm-container-${idx}" style="display:none;">
           <button class="btn btn-secondary" data-accion="cerrar-terminal">Cerrar terminal</button>
-          <div id="xterm-inner-${idx}" style="width:100%;height:260px;overflow:auto;"></div>
+          <div id="xterm-inner-${idx}" class="xterm-inner-wrapper"></div>
         </div>
       </div>
     </div>
