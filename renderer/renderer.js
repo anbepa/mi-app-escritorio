@@ -16,8 +16,14 @@ function actualizarYMostrarPrompt(idx) {
   const pasos = esc['Paso a Paso'] || '';
   
   // Este nuevo prompt se enfoca únicamente en los pasos a ejecutar.
-  const prompt = `usando playwright MCP ejecuta estos pasos:\n\n${pasos}`;
-
+  const nombreEscenario = esc['ID Caso'] || 'CP1';
+  const pasosArr = pasos.split('\n').filter(Boolean);
+  let prompt = '';
+  prompt += `Crea un directorio para los resultados llamado ${nombreEscenario}. Usa el comando mkdir -p reporte_wwf para asegurar que no falle si la carpeta ya existe.\n`;
+  pasosArr.forEach((paso) => {
+    prompt += `${paso}\n`;
+  });
+  prompt += `Tomar una captura de pantalla de la evidencia final y guárdala en ${nombreEscenario}`;
   promptArea.value = prompt;
   promptPanel.style.display = 'block';
 }
@@ -95,7 +101,7 @@ function enviarPromptATerminal(idx) {
     // Reemplazar saltos de línea por espacios
     const texto = promptArea.value.replace(/\n/g, ' ');
     if (texto.trim()) {
-      // Enviar el prompt completo al proceso Gemini CLI con retorno de carro ('\r')
+      // Enviar el prompt completo al proceso Gemini CLI with retorno de carro ('\r')
       window.electronAPI.enviarInputTerminal(texto + '\r', idx);
       // Limpiar el área de texto después de enviar el prompt
       promptArea.value = '';
