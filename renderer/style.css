@@ -550,3 +550,9 @@ textarea {
   border-bottom: 1.5px dashed #2563eb;
   background: transparent;
 }
+
+#prompt-area-0, [id^="prompt-area-"] {
+  font-family: 'Segoe UI', Arial, sans-serif !important;
+  font-size: 1em !important;
+  text-align: left !important;
+}

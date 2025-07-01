@@ -14,16 +14,27 @@ function actualizarYMostrarPrompt(idx) {
 
   const esc = escenarios[idx] || {};
   const pasos = esc['Paso a Paso'] || '';
-  
-  // Este nuevo prompt se enfoca únicamente en los pasos a ejecutar.
   const nombreEscenario = esc['ID Caso'] || 'CP1';
   const pasosArr = pasos.split('\n').filter(Boolean);
+
   let prompt = '';
-  prompt += `Crea un directorio para los resultados llamado ${nombreEscenario}. Usa el comando mkdir -p reporte_wwf para asegurar que no falle si la carpeta ya existe.\n`;
-  pasosArr.forEach((paso) => {
-    prompt += `${paso}\n`;
+  prompt += `Responde en español.\n`;
+  prompt += `Usando Playwright MCP, ejecuta los siguientes pasos:\n`;
+  prompt += `Nota importante: Crea un directorio para las imágenes llamado ${nombreEscenario}. Usa el comando mkdir -p reporte_wwf para asegurar que no falle si la carpeta ya existe. El navegador se debe iniciar en modo incógnito (incognito: true) y debe ignorar todos los certificados (ignoreHTTPSErrors: true).\n`;
+  if (pasosArr.length >= 2) {
+    prompt += `Solo toma una captura de pantalla en el penúltimo paso (último - 1). La imagen debe guardarse en la ruta absoluta de la carpeta creada (${nombreEscenario}) y el archivo debe llamarse exactamente como el nombre del paso.\n\n`;
+  }
+
+  pasosArr.forEach((paso, i) => {
+    const nombrePaso = paso.replace(/^[0-9]+\.?\s*/, '').trim();
+    if (i === pasosArr.length - 2 && pasosArr.length >= 2) {
+      prompt += `${i + 1}. ${nombrePaso} (Toma una captura de pantalla y guárdala en la ruta absoluta de la carpeta ${nombreEscenario} con el nombre de este paso)\n`;
+    } else {
+      prompt += `${i + 1}. ${nombrePaso}\n`;
+    }
   });
-  prompt += `Tomar una captura de pantalla de la evidencia final y guárdala en ${nombreEscenario}`;
+  prompt += `${pasosArr.length + 1}. Cerrar navegador`;
+
   promptArea.value = prompt;
   promptPanel.style.display = 'block';
 }
