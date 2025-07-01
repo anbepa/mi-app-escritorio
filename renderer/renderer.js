@@ -232,7 +232,18 @@ function renderEscenarios() {
   });
   escenariosDiv.appendChild(tabsBar);
 
-  // Renderizar solo el escenario activo
+  // --- MODIFICACIÓN PARA IMPRESIÓN ---
+  // Si estamos imprimiendo, renderizar todos los escenarios
+  if (window.matchMedia && window.matchMedia('print').matches) {
+    escenarios.forEach((esc, idx) => {
+      const escenarioEl = crearEscenarioHTML(esc, idx);
+      escenariosDiv.appendChild(escenarioEl);
+      renderEvidencias(idx);
+    });
+    return;
+  }
+
+  // Renderizar solo el escenario activo normalmente
   const idx = window.escenarioActivo || 0;
   if (escenarios[idx]) {
     const escenarioEl = crearEscenarioHTML(escenarios[idx], idx);
@@ -326,6 +337,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   document.getElementById('btn-agregar-escenario').addEventListener('click', agregarEscenario);
+
+  // Interceptar pegado en celdas contenteditable para solo texto plano
+  document.addEventListener('paste', function(e) {
+    const target = e.target;
+    if (target && target.isContentEditable) {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      // Insertar solo texto plano en la posición del cursor
+      document.execCommand('insertText', false, text);
+    }
+  });
 });
 
 function agregarEscenario() {

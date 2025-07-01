@@ -7,15 +7,15 @@ body {
 }
 
 header {
-  background: #2d3e50;
-  color: #fff;
-  padding: 2rem 2rem 1.5rem 2rem;
+  background: #f8fafc;
+  color: #222;
+  padding: 1rem 1rem 0.7rem 1rem;
   text-align: center;
-  font-size: 2.2rem;
-  letter-spacing: 1px;
-  font-weight: 700;
-  border-radius: 0 0 18px 18px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  font-size: 1.3rem;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  border-radius: 0 0 10px 10px;
+  box-shadow: none;
 }
 
 .container {
@@ -35,8 +35,8 @@ header {
 }
 
 .btn, button, input[type="submit"] {
-  background: #2563eb;
-  color: #fff;
+  background: #e5e7eb;
+  color: #222;
   border: none;
   padding: 0.7em 1.5em;
   border-radius: 6px;
@@ -49,19 +49,23 @@ header {
   outline: none;
 }
 .btn:hover, button:hover, input[type="submit"]:hover {
-  background: #174ea6;
+  background: #d1d5db;
 }
 .btn-danger {
-  background: #e53935;
+  background: #f3f4f6;
+  color: #b91c1c;
 }
 .btn-danger:hover {
-  background: #b71c1c;
+  background: #e5e7eb;
+  color: #991b1b;
 }
 .btn-secondary {
-  background: #64748b;
+  background: #f3f4f6;
+  color: #222;
 }
 .btn-secondary:hover {
-  background: #334155;
+  background: #e5e7eb;
+  color: #222;
 }
 
 section.escenario {
@@ -286,6 +290,34 @@ textarea {
 }
 
 @media print {
+  .evidencia-block {
+    background: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+  .evidencias-grid {
+    background: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+  .evidencia-block img {
+    border: none !important;
+    box-shadow: none !important;
+    background: none !important;
+    max-width: 48vw !important;
+    max-height: 320px !important;
+    width: 100% !important;
+    height: auto !important;
+    display: block;
+    margin: 0 auto 10px auto;
+    box-sizing: border-box;
+  }
+  .evidencias-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px 10px !important;
+  }
   .evidencia-sql-table-wrap {
     overflow-x: visible !important;
     padding: 0 !important;
@@ -310,8 +342,39 @@ textarea {
     max-height: none !important;
     overflow: visible !important;
   }
-  .evidencias-grid {
-    gap: 10px 10px !important;
+  .btn, button, input[type="submit"] {
+    display: none !important;
+  }
+  .escenario-table th:last-child,
+  .escenario-table td:last-child {
+    display: none !important;
+  }
+  header {
+    display: none !important;
+  }
+  .evidencia-label {
+    width: 100% !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: initial !important;
+    font-size: 1em !important;
+    color: #222 !important;
+    background: none !important;
+    margin-bottom: 4px !important;
+    display: block !important;
+  }
+  .evidencia-block input.evidencia-nombre {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 1em !important;
+    color: #222 !important;
+    background: none !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: inline !important;
   }
 }
 
@@ -443,8 +506,8 @@ textarea {
   border-bottom: 2px solid #e0e0e0;
 }
 .escenario-tab-btn {
-  background: #e3eafc;
-  color: #1e293b;
+  background: #e5e7eb;
+  color: #222;
   border: none;
   border-radius: 8px 8px 0 0;
   padding: 0.7em 1.5em;
@@ -452,9 +515,38 @@ textarea {
   cursor: pointer;
   margin-bottom: -2px;
   transition: background 0.2s, color 0.2s;
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(44,62,80,0.07);
 }
 .escenario-tab-btn.active {
-  background: #2563eb;
-  color: #fff;
+  background: #d1d5db;
+  color: #222;
   font-weight: bold;
+}
+.escenario-tab-btn:hover {
+  background: #d1d5db;
+  color: #222;
+}
+
+.evidencia-nombre {
+  display: inline;
+  border: none;
+  background: transparent;
+  font-size: 1em;
+  color: #444;
+  font-weight: 500;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  box-shadow: none;
+  transition: border-bottom 0.2s;
+  border-bottom: 1px dashed transparent;
+  cursor: pointer;
+}
+.evidencia-nombre:focus, .evidencia-nombre:hover {
+  border-bottom: 1.5px dashed #2563eb;
+  background: transparent;
 }

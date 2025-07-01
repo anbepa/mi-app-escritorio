@@ -13,19 +13,15 @@
       <h1>Matriz de Casos de Prueba</h1>
     </header>
     
-    <div class="add-scenario-bar">
+    <!-- <div class="sugerencia-impresion">
+      Para mejores resultados, imprime en orientación horizontal (landscape).
+    </div> -->
+    <div class="export-bar">
+      <!-- <button class="btn" onclick="exportarZip()">Exportar Paquete (.zip)</button> -->
       <button class="btn" id="btn-cargar-csv">Cargar archivo CSV</button>
       <button class="btn" id="btn-agregar-escenario">Agregar Escenario en Blanco</button>
+      <button class="btn" onclick="window.print()" title="Para mejores resultados, imprime en orientación horizontal (landscape).">Imprimir / Guardar PDF</button>
     </div>
-    <div class="sugerencia-impresion">
-      Para mejores resultados, imprime en orientación horizontal (landscape).
-    </div>
-    <div class="export-bar">
-      <button class="btn" onclick="exportarZip()">Exportar Paquete (.zip)</button>
-      <button class="btn" onclick="exportarTodosEscenariosPDF()">Exportar todos los escenarios a PDF</button>
-      <button class="btn" onclick="window.print()">Imprimir / Guardar PDF</button>
-    </div>
-    <footer class="footer">Desarrollado con Electron - 2024</footer>
   </div>
   <div id="modal-confirm" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.35); z-index:2000; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:10px; padding:24px; min-width:400px; max-width:90vw; box-shadow:0 2px 16px #0008; position:relative;">
