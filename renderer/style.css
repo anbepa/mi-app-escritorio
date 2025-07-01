@@ -434,4 +434,27 @@ textarea {
 .cerrar-terminal-btn {
   margin-right: 0;
   margin-top: 0;
-} 
+}
+
+.escenarios-tabs-bar {
+  display: flex;
+  gap: 0.5em;
+  margin-bottom: 1.2em;
+  border-bottom: 2px solid #e0e0e0;
+}
+.escenario-tab-btn {
+  background: #e3eafc;
+  color: #1e293b;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  padding: 0.7em 1.5em;
+  font-size: 1em;
+  cursor: pointer;
+  margin-bottom: -2px;
+  transition: background 0.2s, color 0.2s;
+}
+.escenario-tab-btn.active {
+  background: #2563eb;
+  color: #fff;
+  font-weight: bold;
+}

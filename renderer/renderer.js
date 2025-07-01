@@ -208,17 +208,35 @@ function crearEscenarioHTML(esc, idx) {
 function renderEscenarios() {
   const escenariosDiv = document.getElementById('escenarios-container');
   escenariosDiv.innerHTML = '';
+
+  // Crear barra de pestañas
+  const tabsBar = document.createElement('div');
+  tabsBar.className = 'escenarios-tabs-bar';
   escenarios.forEach((esc, idx) => {
-    const escenarioEl = crearEscenarioHTML(esc, idx);
+    const tabBtn = document.createElement('button');
+    tabBtn.className = 'escenario-tab-btn';
+    tabBtn.textContent = esc['ID Caso'] || `Escenario ${idx + 1}`;
+    tabBtn.dataset.idx = idx;
+    if (idx === window.escenarioActivo) tabBtn.classList.add('active');
+    tabBtn.addEventListener('click', () => {
+      window.escenarioActivo = idx;
+      renderEscenarios();
+    });
+    tabsBar.appendChild(tabBtn);
+  });
+  escenariosDiv.appendChild(tabsBar);
+
+  // Renderizar solo el escenario activo
+  const idx = window.escenarioActivo || 0;
+  if (escenarios[idx]) {
+    const escenarioEl = crearEscenarioHTML(escenarios[idx], idx);
     escenariosDiv.appendChild(escenarioEl);
     renderEvidencias(idx);
-  });
+  }
 }
 
-function agregarEscenario() {
-  escenarios.push({ 'ID Caso': '', 'Escenario de Prueba': '', 'Precondiciones': '', 'Paso a Paso': '', 'Resultado Esperado': '', evidencias: [] });
-  renderEscenarios();
-}
+// Inicializar variable global para el escenario activo
+window.escenarioActivo = 0;
 
 // --- Inicialización y Delegación de Eventos ---
 
@@ -234,6 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'Paso a Paso': '1. Ejecutar consulta SQL\n2. Verificar resultado',
     'Resultado Esperado': 'El resultado debe ser correcto', evidencias: []
   }];
+  window.escenarioActivo = 0;
   renderEscenarios();
 
   // Delegación de eventos para acciones principales
@@ -294,11 +313,17 @@ document.addEventListener('DOMContentLoaded', () => {
       skipEmptyLines: true,
       complete: (results) => {
         escenarios = results.data.map((row, i) => ({ ...row, idx: i, evidencias: [] }));
+        window.escenarioActivo = 0; // Siempre mostrar el primero tras cargar CSV
         renderEscenarios();
-        if (escenarios.length > 0) abrirTerminalGemini(0);
       }
     });
   });
   
   document.getElementById('btn-agregar-escenario').addEventListener('click', agregarEscenario);
 });
+
+function agregarEscenario() {
+  escenarios.push({ 'ID Caso': '', 'Escenario de Prueba': '', 'Precondiciones': '', 'Paso a Paso': '', 'Resultado Esperado': '', evidencias: [] });
+  window.escenarioActivo = escenarios.length - 1; // Selecciona el nuevo escenario
+  renderEscenarios();
+}
