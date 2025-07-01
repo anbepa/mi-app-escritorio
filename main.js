@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs'); // Importamos el módulo fs para manejar archivos
 const { spawn } = require('child_process');
 const pty = require('node-pty');
 
@@ -47,8 +48,7 @@ ipcMain.handle('dialog:openFile', async () => {
   }
 });
 
-
-
+// --- [BLOQUE MODIFICADO] ---
 ipcMain.on('terminal:open', (event, shell, shellArgs, idx) => {
   console.log(`Main: Solicitud para abrir terminal ${idx} con shell: ${shell}, args: ${shellArgs}`);
   const win = BrowserWindow.getFocusedWindow();
@@ -57,18 +57,33 @@ ipcMain.on('terminal:open', (event, shell, shellArgs, idx) => {
     ptyProcesses[idx].kill();
     delete ptyProcesses[idx];
   }
-  const projectRoot = __dirname;
+  
+  // 1. Obtenemos la ruta del directorio principal del usuario.
+  const userHomeDir = app.getPath('home');
+  // 2. Definimos el nombre de la subcarpeta y creamos la ruta completa.
+  const subfolderName = 'MiAppTerminal'; // Puedes cambiar este nombre
+  const workDir = path.join(userHomeDir, subfolderName);
+
+  // 3. Verificamos si la carpeta no existe y, si es así, la creamos.
+  if (!fs.existsSync(workDir)) {
+    fs.mkdirSync(workDir, { recursive: true });
+  }
+
   const ptyProcess = pty.spawn(shell, shellArgs || [], {
     name: 'xterm-color',
     cols: 80,
     rows: 24,
-    cwd: projectRoot, // Raíz del proyecto
+    // 4. Usamos la ruta a nuestra nueva subcarpeta como el directorio de trabajo.
+    cwd: workDir, 
     env: process.env
   });
+  
   ptyProcesses[idx] = ptyProcess;
+  
   ptyProcess.on('data', (data) => {
     win.webContents.send('terminal:data', { idx, data });
   });
+
   ptyProcess.on('exit', () => {
     win.webContents.send('terminal:exit', idx);
     delete ptyProcesses[idx];
@@ -89,4 +104,4 @@ ipcMain.on('terminal:resize', (_event, cols, rows, idx) => {
   if (ptyProcesses[idx]) {
     ptyProcesses[idx].resize(cols, rows);
   }
-}); 
+});
