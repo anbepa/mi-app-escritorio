@@ -125,5 +125,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
       delete xtermInstances[idx];
       delete fitAddonInstances[idx];
     }
+  },
+  // --- NUEVA FUNCIÓN PARA LEER IMAGEN COMO BASE64 ---
+  leerImagenComoBase64: (ruta) => {
+    const ext = ruta.split('.').pop().toLowerCase();
+    const mime = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png';
+    const data = fs.readFileSync(ruta);
+    return `data:${mime};base64,${data.toString('base64')}`;
   }
 });

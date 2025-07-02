@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  document.getElementById('btn-descargar-pdf').addEventListener('click', generarReportePDF);
+  document.getElementById('btn-descargar-pdf').addEventListener('click', () => generarReportePDF());
 });
 
 function agregarEscenario() {
@@ -372,7 +372,7 @@ function agregarEscenario() {
 }
 
 // --- Generación de PDF profesional ---
-function generarReportePDF() {
+async function generarReportePDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -380,27 +380,39 @@ function generarReportePDF() {
   let y = 40;
 
   // === DATOS DE PORTADA (puedes personalizar estos valores) ===
-  const logoUrl = 'https://upload.wikimedia.org/wikipedia/commons/6/6b/Bitmap_Icon_Example.png'; // Logo de ejemplo
+  const logoPath = 'pngegg.png';
   const responsable = 'Juan Pérez';
   const area = 'QA / Testing';
   const version = '1.0';
   const resumen = 'Este reporte contiene el detalle de los escenarios de prueba ejecutados, sus resultados y evidencias asociadas.';
 
-  // === PORTADA ===
+  // === PORTADA CENTRADA CON LOGO ===
+  let portadaY = 80;
+  // Logo centrado (pngegg.png)
+  try {
+    const logoBase64 = window.electronAPI.leerImagenComoBase64(logoPath);
+    const logoWidth = 180;
+    const logoHeight = 100;
+    const logoX = (pageWidth - logoWidth) / 2;
+    doc.addImage(logoBase64, 'PNG', logoX, portadaY, logoWidth, logoHeight);
+    portadaY += logoHeight + 30;
+  } catch (e) {
+    portadaY += 30;
+  }
   doc.setFontSize(28);
   doc.setTextColor('#000000');
-  doc.text('Reporte de Matriz de Casos de Prueba', pageWidth / 2, y, { align: 'center' });
-  y += 40;
+  doc.text('Reporte de Matriz de Casos de Prueba', pageWidth / 2, portadaY, { align: 'center' });
+  portadaY += 40;
   doc.setFontSize(16);
-  doc.text('Fecha de generación: ' + new Date().toLocaleString(), pageWidth / 2, y, { align: 'center' });
-  y += 30;
+  doc.text('Fecha de generación: ' + new Date().toLocaleString(), pageWidth / 2, portadaY, { align: 'center' });
+  portadaY += 30;
   doc.setFontSize(13);
-  doc.text(`Área: ${area}`, pageWidth / 2, y, { align: 'center' });
-  y += 20;
-  doc.text(`Versión: ${version}`, pageWidth / 2, y, { align: 'center' });
-  y += 30;
+  doc.text(`Área: ${area}`, pageWidth / 2, portadaY, { align: 'center' });
+  portadaY += 20;
+  doc.text(`Versión: ${version}`, pageWidth / 2, portadaY, { align: 'center' });
+  portadaY += 30;
   doc.setFontSize(12);
-  doc.text(resumen, pageWidth / 2, y, { align: 'center', maxWidth: pageWidth - 120 });
+  doc.text(resumen, pageWidth / 2, portadaY, { align: 'center', maxWidth: pageWidth - 120 });
   doc.addPage();
 
   // === ÍNDICE AUTOMÁTICO ===
@@ -477,18 +489,33 @@ function generarReportePDF() {
     // Evidencias (en bloques de dos por fila, estilo grid limpio)
     if (esc.evidencias && esc.evidencias.length > 0) {
       let yEvid = doc.lastAutoTable.finalY + 36;
+      // Título 'Evidencias:' alineado a la izquierda, azul y negrita
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(15);
+      doc.setTextColor('#2563eb');
+      doc.text('Evidencias:', 60, yEvid, { align: 'left' });
+      // Línea divisoria gris claro
+      doc.setDrawColor('#cbd5e1');
+      doc.setLineWidth(1);
+      doc.line(60, yEvid + 6, pageWidth - 60, yEvid + 6);
+      yEvid += 24;
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(13);
       doc.setTextColor('#1e293b');
-      doc.text('Evidencias:', pageWidth / 2, yEvid, { align: 'center' });
-      yEvid += 24;
-      const maxWidth = 260;
-      const maxHeight = 150;
-      const gapX = 48;
+      const maxWidth = 300;
+      const maxHeight = 180;
+      const cellWidth = maxWidth + 24;
+      const gapX = 24;
       const gapY = 56;
+      const xImg1 = 60;
+      const xImg2 = xImg1 + cellWidth + gapX;
       for (let i = 0; i < esc.evidencias.length; i += 2) {
         // Primera imagen de la fila
         const ev1 = esc.evidencias[i];
         let width1 = maxWidth, height1 = maxHeight;
+        let label1 = ev1 && (ev1.nombre || `Evidencia ${i + 1}`) || '';
+        let labelLines1 = [];
+        let labelHeight1 = 0;
         if (ev1 && ev1.data && ev1.data.startsWith('data:image')) {
           const imgProps1 = doc.getImageProperties(ev1.data);
           width1 = imgProps1.width;
@@ -501,10 +528,17 @@ function generarReportePDF() {
             width1 = width1 * (maxHeight / height1);
             height1 = maxHeight;
           }
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(12);
+          labelLines1 = doc.splitTextToSize(label1, width1);
+          labelHeight1 = labelLines1.length * 15;
         }
         // Segunda imagen de la fila (si existe)
         const ev2 = esc.evidencias[i + 1];
         let width2 = maxWidth, height2 = maxHeight;
+        let label2 = ev2 && (ev2.nombre || `Evidencia ${i + 2}`) || '';
+        let labelLines2 = [];
+        let labelHeight2 = 0;
         if (ev2 && ev2.data && ev2.data.startsWith('data:image')) {
           const imgProps2 = doc.getImageProperties(ev2.data);
           width2 = imgProps2.width;
@@ -517,42 +551,46 @@ function generarReportePDF() {
             width2 = width2 * (maxHeight / height2);
             height2 = maxHeight;
           }
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(12);
+          labelLines2 = doc.splitTextToSize(label2, width2);
+          labelHeight2 = labelLines2.length * 15;
         }
+        // Altura máxima de los labels de la fila
+        let labelMaxHeight = Math.max(labelHeight1, labelHeight2);
         // Validar espacio en la hoja
-        let filaAlto = 32 + Math.max(height1, height2) + 16; // label (32) + imagen + margen
+        let filaAlto = labelMaxHeight + Math.max(height1, height2) + 16;
         if (yEvid + filaAlto > pageHeight - 60) {
           doc.addPage();
           yEvid = 60;
         }
-        // Posiciones X
-        const xImg1 = 60;
-        const xImg2 = xImg1 + maxWidth + gapX;
-        // Label arriba de la imagen, negrita, con salto de línea automático
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.setTextColor('#1e293b');
+        // Dibuja label e imagen de la celda 1 (centrados en la celda)
         if (ev1 && ev1.data && ev1.data.startsWith('data:image')) {
-          doc.text(ev1.nombre || `Evidencia ${i + 1}`, xImg1, yEvid, { align: 'left', maxWidth: width1 });
-        }
-        if (ev2 && ev2.data && ev2.data.startsWith('data:image')) {
-          doc.text(ev2.nombre || `Evidencia ${i + 2}`, xImg2, yEvid, { align: 'left', maxWidth: width2 });
-        }
-        doc.setFont('helvetica', 'normal');
-        // Dibuja primera imagen
-        if (ev1 && ev1.data && ev1.data.startsWith('data:image')) {
+          const xLabel1 = xImg1 + (cellWidth - width1) / 2;
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(12);
+          doc.setTextColor('#1e293b');
+          doc.text(labelLines1, xLabel1, yEvid, { align: 'left', maxWidth: width1 });
+          doc.setFont('helvetica', 'normal');
           doc.setDrawColor('#cbd5e1');
           doc.setLineWidth(1);
-          doc.roundedRect(xImg1 - 4, yEvid + 8, width1 + 8, height1 + 8, 10, 10);
-          doc.addImage(ev1.data, 'PNG', xImg1, yEvid + 12, width1, height1);
+          doc.roundedRect(xLabel1 - 4, yEvid + labelMaxHeight + 4, width1 + 8, height1 + 8, 10, 10);
+          doc.addImage(ev1.data, 'PNG', xLabel1, yEvid + labelMaxHeight + 8, width1, height1);
         }
-        // Dibuja segunda imagen si existe
+        // Dibuja label e imagen de la celda 2 (centrados en la celda)
         if (ev2 && ev2.data && ev2.data.startsWith('data:image')) {
+          const xLabel2 = xImg2 + (cellWidth - width2) / 2;
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(12);
+          doc.setTextColor('#1e293b');
+          doc.text(labelLines2, xLabel2, yEvid, { align: 'left', maxWidth: width2 });
+          doc.setFont('helvetica', 'normal');
           doc.setDrawColor('#cbd5e1');
           doc.setLineWidth(1);
-          doc.roundedRect(xImg2 - 4, yEvid + 8, width2 + 8, height2 + 8, 10, 10);
-          doc.addImage(ev2.data, 'PNG', xImg2, yEvid + 12, width2, height2);
+          doc.roundedRect(xLabel2 - 4, yEvid + labelMaxHeight + 4, width2 + 8, height2 + 8, 10, 10);
+          doc.addImage(ev2.data, 'PNG', xLabel2, yEvid + labelMaxHeight + 8, width2, height2);
         }
-        yEvid += Math.max(height1, height2) + gapY + 32;
+        yEvid += labelMaxHeight + Math.max(height1, height2) + gapY + 16;
       }
     }
     // Nueva página para el siguiente escenario, excepto el último
