@@ -5,7 +5,7 @@ build/
 
 # Logs
 yarn-debug.log*
-yarn-error.log*
+yarn-error.log* 
 npm-debug.log*
 
 # Archivos de sistema operativo

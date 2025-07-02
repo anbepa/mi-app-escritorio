@@ -132,5 +132,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const mime = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png';
     const data = fs.readFileSync(ruta);
     return `data:${mime};base64,${data.toString('base64')}`;
-  }
+  },
+  crearGeminiMD: (nombreEscenario, pasos) => ipcRenderer.invoke('crear-gemini-md', nombreEscenario, pasos),
+  verificarGeminiMDExiste: () => ipcRenderer.invoke('verificar-gemini-md-existe'),
 });

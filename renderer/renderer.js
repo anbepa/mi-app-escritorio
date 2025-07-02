@@ -11,30 +11,7 @@ function actualizarYMostrarPrompt(idx) {
   const promptPanel = document.getElementById(`prompt-panel-${idx}`);
   const promptArea = document.getElementById(`prompt-area-${idx}`);
   if (!promptPanel || !promptArea) return;
-
-  const esc = escenarios[idx] || {};
-  const pasos = esc['Paso a Paso'] || '';
-  const nombreEscenario = esc['ID Caso'] || 'CP1';
-  const pasosArr = pasos.split('\n').filter(Boolean);
-
-  let prompt = '';
-  prompt += `Responde en español.\n`;
-  prompt += `Usando Playwright MCP, ejecuta los siguientes pasos:\n`;
-  prompt += `Nota importante: Crea un directorio para las imágenes llamado ${nombreEscenario}. Usa el comando mkdir -p reporte_wwf para asegurar que no falle si la carpeta ya existe. El navegador se debe iniciar en modo incógnito (incognito: true) y debe ignorar todos los certificados (ignoreHTTPSErrors: true).\n`;
-  prompt += `Si una captura de pantalla se guarda en una ruta temporal, muévela automáticamente a la ruta absoluta especificada por el usuario en el prompt.\n`;
-  prompt += '\n';
-
-  pasosArr.forEach((paso, i) => {
-    const nombrePaso = paso.replace(/^[0-9]+\.?\s*/, '').trim();
-    if (i === pasosArr.length - 2 && pasosArr.length >= 2) {
-      prompt += `${i + 1}. ${nombrePaso} (Toma una captura de pantalla y guárdala en la ruta absoluta de la carpeta ${nombreEscenario} con el nombre de este paso)\n`;
-    } else {
-      prompt += `${i + 1}. ${nombrePaso}\n`;
-    }
-  });
-  prompt += `${pasosArr.length + 1}. Cerrar navegador`;
-
-  promptArea.value = prompt;
+  promptArea.value = 'Ejecutar escenario';
   promptPanel.style.display = 'block';
 }
 
@@ -42,6 +19,17 @@ async function abrirTerminalGemini(idx) {
   const container = document.getElementById(`xterm-container-${idx}`);
   const inner = document.getElementById(`xterm-inner-${idx}`);
   if (!container || !inner) return;
+
+  // --- NUEVO: Crear GEMINI.md antes de abrir la terminal ---
+  const esc = escenarios[idx] || {};
+  const nombreEscenario = esc['ID Caso'] || 'CP1';
+  const pasos = esc['Paso a Paso'] || '';
+  try {
+    await window.electronAPI.crearGeminiMD(nombreEscenario, pasos);
+  } catch (e) {
+    alert('No se pudo crear el archivo GEMINI.md: ' + e.message);
+  }
+  // --- FIN NUEVO ---
 
   container.style.display = 'flex';
   actualizarYMostrarPrompt(idx);
@@ -106,20 +94,20 @@ function cerrarTerminalGemini(idx) {
 }
 
 function enviarPromptATerminal(idx) {
-  const promptArea = document.getElementById(`prompt-area-${idx}`);
-  const promptPanel = document.getElementById(`prompt-panel-${idx}`);
-  if (promptArea && xterms[idx]) {
-    // Reemplazar saltos de línea por espacios
-    const texto = promptArea.value.replace(/\n/g, ' ');
-    if (texto.trim()) {
-      // Enviar el prompt completo al proceso Gemini CLI with retorno de carro ('\r')
-      window.electronAPI.enviarInputTerminal(texto + '\r', idx);
-      // Limpiar el área de texto después de enviar el prompt
-      promptArea.value = '';
-      // Ocultar el panel del prompt
+  window.electronAPI.verificarGeminiMDExiste().then((existe) => {
+    if (existe) {
+      const promptArea = document.getElementById(`prompt-area-${idx}`);
+      const comando = promptArea ? promptArea.value.trim() + '\n' : '';
+      if (xterms[idx] && comando) {
+        window.electronAPI.enviarInputTerminal(comando, idx);
+      }
+      if (promptArea) promptArea.value = '';
+      const promptPanel = document.getElementById(`prompt-panel-${idx}`);
       if (promptPanel) promptPanel.style.display = 'none';
+    } else {
+      alert('El archivo GEMINI.md no existe. Por favor, vuelve a ejecutar el escenario para generarlo.');
     }
-  }
+  });
 }
 
 // --- Lógica de Evidencias ---
