@@ -1,3 +1,14 @@
 node_modules/
 dist/
 build/
+.DS_Store
+
+# Logs
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log*
+
+# Archivos de sistema operativo
+Thumbs.db
+ehthumbs.db
+Icon?
