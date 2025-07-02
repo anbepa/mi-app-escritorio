@@ -559,38 +559,55 @@ async function generarReportePDF() {
         // Altura máxima de los labels de la fila
         let labelMaxHeight = Math.max(labelHeight1, labelHeight2);
         // Validar espacio en la hoja
-        let filaAlto = labelMaxHeight + Math.max(height1, height2) + 16;
+        let filaAlto = labelMaxHeight + Math.max(height1, height2) + 40; // más padding
         if (yEvid + filaAlto > pageHeight - 60) {
           doc.addPage();
           yEvid = 60;
         }
-        // Dibuja label e imagen de la celda 1 (centrados en la celda)
+        // Dibuja contenedor 1
         if (ev1 && ev1.data && ev1.data.startsWith('data:image')) {
           const xLabel1 = xImg1 + (cellWidth - width1) / 2;
+          // Fondo gris claro y borde gris claro
+          doc.setFillColor('#f4f4f4');
+          doc.setDrawColor('#f4f4f4');
+          doc.setLineWidth(1.2);
+          doc.roundedRect(xImg1, yEvid, cellWidth, labelMaxHeight + height1 + 24, 16, 16, 'FD');
+          // Label dentro del contenedor
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(12);
           doc.setTextColor('#1e293b');
-          doc.text(labelLines1, xLabel1, yEvid, { align: 'left', maxWidth: width1 });
+          doc.text(labelLines1, xImg1 + 12, yEvid + 20, { align: 'left', maxWidth: cellWidth - 24 });
           doc.setFont('helvetica', 'normal');
-          doc.setDrawColor('#cbd5e1');
-          doc.setLineWidth(1);
-          doc.roundedRect(xLabel1 - 4, yEvid + labelMaxHeight + 4, width1 + 8, height1 + 8, 10, 10);
-          doc.addImage(ev1.data, 'PNG', xLabel1, yEvid + labelMaxHeight + 8, width1, height1);
+          // Imagen centrada en el contenedor
+          doc.addImage(ev1.data, 'PNG', xLabel1, yEvid + labelMaxHeight + 16, width1, height1);
         }
-        // Dibuja label e imagen de la celda 2 (centrados en la celda)
+        // Dibuja contenedor 2
         if (ev2 && ev2.data && ev2.data.startsWith('data:image')) {
           const xLabel2 = xImg2 + (cellWidth - width2) / 2;
+          doc.setFillColor('#f4f4f4');
+          doc.setDrawColor('#f4f4f4');
+          doc.setLineWidth(1.2);
+          doc.roundedRect(xImg2, yEvid, cellWidth, labelMaxHeight + height2 + 24, 16, 16, 'FD');
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(12);
           doc.setTextColor('#1e293b');
-          doc.text(labelLines2, xLabel2, yEvid, { align: 'left', maxWidth: width2 });
+          doc.text(labelLines2, xImg2 + 12, yEvid + 20, { align: 'left', maxWidth: cellWidth - 24 });
           doc.setFont('helvetica', 'normal');
-          doc.setDrawColor('#cbd5e1');
-          doc.setLineWidth(1);
-          doc.roundedRect(xLabel2 - 4, yEvid + labelMaxHeight + 4, width2 + 8, height2 + 8, 10, 10);
-          doc.addImage(ev2.data, 'PNG', xLabel2, yEvid + labelMaxHeight + 8, width2, height2);
+          doc.addImage(ev2.data, 'PNG', xLabel2, yEvid + labelMaxHeight + 16, width2, height2);
         }
-        yEvid += labelMaxHeight + Math.max(height1, height2) + gapY + 16;
+        // Línea divisora vertical entre celdas
+        if (ev1 && ev2 && ev1.data && ev2.data && ev1.data.startsWith('data:image') && ev2.data.startsWith('data:image')) {
+          doc.setDrawColor('#4a4a4a');
+          doc.setLineWidth(0.7);
+          doc.line(xImg2 - gapX / 2, yEvid + 8, xImg2 - gapX / 2, yEvid + labelMaxHeight + Math.max(height1, height2) + 16);
+        }
+        // Línea divisora horizontal entre filas (opcional, solo si hay más filas)
+        if (i + 2 < esc.evidencias.length) {
+          doc.setDrawColor('#4a4a4a');
+          doc.setLineWidth(0.7);
+          doc.line(xImg1, yEvid + labelMaxHeight + Math.max(height1, height2) + 32, xImg2 + cellWidth, yEvid + labelMaxHeight + Math.max(height1, height2) + 32);
+        }
+        yEvid += labelMaxHeight + Math.max(height1, height2) + gapY + 24;
       }
     }
     // Nueva página para el siguiente escenario, excepto el último
@@ -616,11 +633,9 @@ async function generarReportePDF() {
     // Encabezado
     doc.setFontSize(10);
     doc.setTextColor('#4a4a4a');
-    doc.text('Matriz de Casos de Prueba', 40, 24);
     // Pie de página
     doc.setTextColor('#9b9b9b'); // gris medio
     doc.text(`Página ${i} de ${pageCount}`, pageWidth - 80, pageHeight - 20);
-    doc.text('Generado por MiAppEscritorio', 40, pageHeight - 20);
   }
 
   // === ÍNDICE CON NÚMEROS DE PÁGINA ===
