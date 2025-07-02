@@ -361,10 +361,245 @@ document.addEventListener('DOMContentLoaded', () => {
       document.execCommand('insertText', false, text);
     }
   });
+
+  document.getElementById('btn-descargar-pdf').addEventListener('click', generarReportePDF);
 });
 
 function agregarEscenario() {
   escenarios.push({ 'ID Caso': '', 'Escenario de Prueba': '', 'Precondiciones': '', 'Paso a Paso': '', 'Resultado Esperado': '', evidencias: [] });
   window.escenarioActivo = escenarios.length - 1; // Selecciona el nuevo escenario
   renderEscenarios();
+}
+
+// --- Generación de PDF profesional ---
+function generarReportePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  let y = 40;
+
+  // === DATOS DE PORTADA (puedes personalizar estos valores) ===
+  const logoUrl = 'https://upload.wikimedia.org/wikipedia/commons/6/6b/Bitmap_Icon_Example.png'; // Logo de ejemplo
+  const responsable = 'Juan Pérez';
+  const area = 'QA / Testing';
+  const version = '1.0';
+  const resumen = 'Este reporte contiene el detalle de los escenarios de prueba ejecutados, sus resultados y evidencias asociadas.';
+
+  // === PORTADA ===
+  doc.setFontSize(28);
+  doc.setTextColor('#000000');
+  doc.text('Reporte de Matriz de Casos de Prueba', pageWidth / 2, y, { align: 'center' });
+  y += 40;
+  doc.setFontSize(16);
+  doc.text('Fecha de generación: ' + new Date().toLocaleString(), pageWidth / 2, y, { align: 'center' });
+  y += 30;
+  doc.setFontSize(13);
+  doc.text(`Área: ${area}`, pageWidth / 2, y, { align: 'center' });
+  y += 20;
+  doc.text(`Versión: ${version}`, pageWidth / 2, y, { align: 'center' });
+  y += 30;
+  doc.setFontSize(12);
+  doc.text(resumen, pageWidth / 2, y, { align: 'center', maxWidth: pageWidth - 120 });
+  doc.addPage();
+
+  // === ÍNDICE AUTOMÁTICO ===
+  doc.setFontSize(20);
+  doc.text('Índice', 60, 60);
+  doc.setFontSize(13);
+  let indiceY = 90;
+  const indiceEscenarios = [];
+  escenarios.forEach((esc, idx) => {
+    const nombre = esc['ID Caso'] || `Escenario ${idx + 1}`;
+    doc.text(`${idx + 1}. ${nombre}`, 80, indiceY);
+    indiceEscenarios.push({ idx, nombre, page: doc.internal.getNumberOfPages() + 1 });
+    indiceY += 22;
+    if (indiceY > pageHeight - 60) {
+      doc.addPage();
+      indiceY = 60;
+    }
+  });
+  doc.addPage();
+
+  // === ESCENARIOS ===
+  const escenariosPaginas = [];
+  escenarios.forEach((esc, idx) => {
+    let startY = 60;
+    escenariosPaginas.push(doc.internal.getNumberOfPages());
+    // Tabla con formato solicitado (colores y estilos)
+    const tablaAncho = 80 + 150 + 120 + 220 + 120; // suma de cellWidth
+    const margenTabla = (pageWidth - tablaAncho) / 2;
+    doc.autoTable({
+      startY: startY,
+      head: [[
+        'ID Caso', 'Escenario de Prueba', 'Precondiciones', 'Paso a Paso', 'Resultado Esperado'
+      ]],
+      body: [[
+        esc['ID Caso'] || '',
+        esc['Escenario de Prueba'] || '',
+        esc['Precondiciones'] || '',
+        esc['Paso a Paso'] || '',
+        esc['Resultado Esperado'] || ''
+      ]],
+      styles: {
+        fontSize: 13,
+        cellPadding: 10,
+        halign: 'left',
+        font: 'helvetica',
+        textColor: '#222',
+        fillColor: '#f8fafc',
+        lineColor: '#cbd5e1',
+        lineWidth: 1
+      },
+      headStyles: {
+        fillColor: '#e3eafc',
+        textColor: '#1e293b',
+        fontStyle: 'bold',
+        font: 'helvetica',
+        fontSize: 15,
+        halign: 'left',
+        lineColor: '#cbd5e1',
+        lineWidth: 1.5
+      },
+      alternateRowStyles: { fillColor: '#f8fafc' },
+      margin: { left: margenTabla, right: margenTabla },
+      theme: 'grid',
+      columnStyles: {
+        0: { cellWidth: 80 },
+        1: { cellWidth: 150 },
+        2: { cellWidth: 120 },
+        3: { cellWidth: 220 },
+        4: { cellWidth: 120 },
+      },
+      tableWidth: 'auto',
+    });
+
+    // Evidencias (en bloques de dos por fila, estilo grid limpio)
+    if (esc.evidencias && esc.evidencias.length > 0) {
+      let yEvid = doc.lastAutoTable.finalY + 36;
+      doc.setFontSize(13);
+      doc.setTextColor('#1e293b');
+      doc.text('Evidencias:', pageWidth / 2, yEvid, { align: 'center' });
+      yEvid += 24;
+      const maxWidth = 260;
+      const maxHeight = 150;
+      const gapX = 48;
+      const gapY = 56;
+      for (let i = 0; i < esc.evidencias.length; i += 2) {
+        // Primera imagen de la fila
+        const ev1 = esc.evidencias[i];
+        let width1 = maxWidth, height1 = maxHeight;
+        if (ev1 && ev1.data && ev1.data.startsWith('data:image')) {
+          const imgProps1 = doc.getImageProperties(ev1.data);
+          width1 = imgProps1.width;
+          height1 = imgProps1.height;
+          if (width1 > maxWidth) {
+            height1 = height1 * (maxWidth / width1);
+            width1 = maxWidth;
+          }
+          if (height1 > maxHeight) {
+            width1 = width1 * (maxHeight / height1);
+            height1 = maxHeight;
+          }
+        }
+        // Segunda imagen de la fila (si existe)
+        const ev2 = esc.evidencias[i + 1];
+        let width2 = maxWidth, height2 = maxHeight;
+        if (ev2 && ev2.data && ev2.data.startsWith('data:image')) {
+          const imgProps2 = doc.getImageProperties(ev2.data);
+          width2 = imgProps2.width;
+          height2 = imgProps2.height;
+          if (width2 > maxWidth) {
+            height2 = height2 * (maxWidth / width2);
+            width2 = maxWidth;
+          }
+          if (height2 > maxHeight) {
+            width2 = width2 * (maxHeight / height2);
+            height2 = maxHeight;
+          }
+        }
+        // Validar espacio en la hoja
+        let filaAlto = 32 + Math.max(height1, height2) + 16; // label (32) + imagen + margen
+        if (yEvid + filaAlto > pageHeight - 60) {
+          doc.addPage();
+          yEvid = 60;
+        }
+        // Posiciones X
+        const xImg1 = 60;
+        const xImg2 = xImg1 + maxWidth + gapX;
+        // Label arriba de la imagen, negrita, con salto de línea automático
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor('#1e293b');
+        if (ev1 && ev1.data && ev1.data.startsWith('data:image')) {
+          doc.text(ev1.nombre || `Evidencia ${i + 1}`, xImg1, yEvid, { align: 'left', maxWidth: width1 });
+        }
+        if (ev2 && ev2.data && ev2.data.startsWith('data:image')) {
+          doc.text(ev2.nombre || `Evidencia ${i + 2}`, xImg2, yEvid, { align: 'left', maxWidth: width2 });
+        }
+        doc.setFont('helvetica', 'normal');
+        // Dibuja primera imagen
+        if (ev1 && ev1.data && ev1.data.startsWith('data:image')) {
+          doc.setDrawColor('#cbd5e1');
+          doc.setLineWidth(1);
+          doc.roundedRect(xImg1 - 4, yEvid + 8, width1 + 8, height1 + 8, 10, 10);
+          doc.addImage(ev1.data, 'PNG', xImg1, yEvid + 12, width1, height1);
+        }
+        // Dibuja segunda imagen si existe
+        if (ev2 && ev2.data && ev2.data.startsWith('data:image')) {
+          doc.setDrawColor('#cbd5e1');
+          doc.setLineWidth(1);
+          doc.roundedRect(xImg2 - 4, yEvid + 8, width2 + 8, height2 + 8, 10, 10);
+          doc.addImage(ev2.data, 'PNG', xImg2, yEvid + 12, width2, height2);
+        }
+        yEvid += Math.max(height1, height2) + gapY + 32;
+      }
+    }
+    // Nueva página para el siguiente escenario, excepto el último
+    if (idx < escenarios.length - 1) doc.addPage();
+  });
+
+  // === ESPACIO PARA FIRMAS ===
+  doc.addPage();
+  doc.setFontSize(16);
+  doc.text('Firmas y Validaciones', 60, 80);
+  doc.setFontSize(12);
+  doc.text('Responsable QA:', 80, 140);
+  doc.line(200, 142, 500, 142);
+  doc.text('Revisor:', 80, 200);
+  doc.line(150, 202, 500, 202);
+  doc.text('Aprobador:', 80, 260);
+  doc.line(170, 262, 500, 262);
+
+  // === ENCABEZADOS Y PIES DE PÁGINA PERSONALIZADOS ===
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    // Encabezado
+    doc.setFontSize(10);
+    doc.setTextColor('#4a4a4a');
+    doc.text('Matriz de Casos de Prueba', 40, 24);
+    // Pie de página
+    doc.setTextColor('#9b9b9b'); // gris medio
+    doc.text(`Página ${i} de ${pageCount}`, pageWidth - 80, pageHeight - 20);
+    doc.text('Generado por MiAppEscritorio', 40, pageHeight - 20);
+  }
+
+  // === ÍNDICE CON NÚMEROS DE PÁGINA ===
+  // (Reescribir la página del índice con los números de página correctos)
+  doc.setPage(2); // La página 2 es el índice
+  doc.setFontSize(20);
+  doc.text('Índice', 60, 60);
+  doc.setFontSize(13);
+  indiceY = 90;
+  indiceEscenarios.forEach((item, i) => {
+    doc.text(`${i + 1}. ${item.nombre} ............................................. ${escenariosPaginas[i] + 1}`, 80, indiceY);
+    indiceY += 22;
+    if (indiceY > pageHeight - 60) {
+      doc.addPage();
+      indiceY = 60;
+    }
+  });
+
+  doc.save('reporte_casos_prueba.pdf');
 }
