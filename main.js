@@ -52,38 +52,32 @@ ipcMain.handle('dialog:openFile', async () => {
 ipcMain.on('terminal:open', (event, shell, shellArgs, idx) => {
   console.log(`Main: Solicitud para abrir terminal ${idx} con shell: ${shell}, args: ${shellArgs}`);
   const win = BrowserWindow.getFocusedWindow();
-  // Si ya existe un pty para este idx, lo matamos
   if (ptyProcesses[idx]) {
     ptyProcesses[idx].kill();
     delete ptyProcesses[idx];
   }
-  
-  // 1. Obtenemos la ruta del directorio principal del usuario.
   const userHomeDir = app.getPath('home');
-  // 2. Definimos el nombre de la subcarpeta y creamos la ruta completa.
-  const subfolderName = 'MiAppTerminal'; // Puedes cambiar este nombre
+  const subfolderName = 'MiAppTerminal';
   const workDir = path.join(userHomeDir, subfolderName);
-
-  // 3. Verificamos si la carpeta no existe y, si es así, la creamos.
   if (!fs.existsSync(workDir)) {
     fs.mkdirSync(workDir, { recursive: true });
   }
-
+  // --- MODIFICACIÓN: Asegurar que /opt/homebrew/bin esté en el PATH ---
+  const env = { ...process.env };
+  if (!env.PATH.includes('/opt/homebrew/bin')) {
+    env.PATH = env.PATH + ':/opt/homebrew/bin';
+  }
   const ptyProcess = pty.spawn(shell, shellArgs || [], {
     name: 'xterm-color',
     cols: 80,
     rows: 24,
-    // 4. Usamos la ruta a nuestra nueva subcarpeta como el directorio de trabajo.
-    cwd: workDir, 
-    env: process.env
+    cwd: workDir,
+    env: env
   });
-  
   ptyProcesses[idx] = ptyProcess;
-  
   ptyProcess.on('data', (data) => {
     win.webContents.send('terminal:data', { idx, data });
   });
-
   ptyProcess.on('exit', () => {
     win.webContents.send('terminal:exit', idx);
     delete ptyProcesses[idx];

@@ -4,18 +4,44 @@
   "description": "Aplicación de escritorio para cargar CSV, visualizar datos y conectar a PostgreSQL, basada en Electron.",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:all": "electron-builder -mwl"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "electron": "^29.0.0",
     "node-pty": "^1.0.0",
     "papaparse": "^5.4.1",
     "xterm": "^5.3.0",
     "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^26.0.12",
     "electron-rebuild": "^3.2.9"
+  },
+  "build": {
+    "appId": "com.tuempresa.miappescritorio",
+    "productName": "MiAppEscritorio",
+    "files": [
+      "**/*"
+    ],
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns",
+      "identity": "Apple Development: andro11anto@gmail.com (766BTXBM2J)",
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "directories": {
+      "buildResources": "build"
+    }
   }
 }
