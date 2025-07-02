@@ -410,9 +410,6 @@ async function generarReportePDF() {
   doc.text(`Área: ${area}`, pageWidth / 2, portadaY, { align: 'center' });
   portadaY += 20;
   doc.text(`Versión: ${version}`, pageWidth / 2, portadaY, { align: 'center' });
-  portadaY += 30;
-  doc.setFontSize(12);
-  doc.text(resumen, pageWidth / 2, portadaY, { align: 'center', maxWidth: pageWidth - 120 });
   doc.addPage();
 
   // === ÍNDICE AUTOMÁTICO ===
@@ -488,7 +485,14 @@ async function generarReportePDF() {
 
     // Evidencias (en bloques de dos por fila, estilo grid limpio)
     if (esc.evidencias && esc.evidencias.length > 0) {
+      // Calcular altura mínima para título, línea y una fila de evidencias
+      const alturaTituloLinea = 24;
+      const alturaFilaMinima = 120 + 40; // contenedor bajo mínimo + margen
       let yEvid = doc.lastAutoTable.finalY + 36;
+      if (yEvid + alturaTituloLinea + alturaFilaMinima > pageHeight - 60) {
+        doc.addPage();
+        yEvid = 60;
+      }
       // Título 'Evidencias:' alineado a la izquierda, azul y negrita
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(15);
@@ -651,6 +655,8 @@ async function generarReportePDF() {
     if (indiceY > pageHeight - 60) {
       doc.addPage();
       indiceY = 60;
+      doc.setFontSize(13); // Restablecer tamaño de fuente
+      doc.setFont('helvetica', 'normal'); // Restablecer estilo de fuente
     }
   });
 
